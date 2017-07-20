@@ -5,6 +5,15 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
 
+class JSONDict(dict):
+
+    def __init__(self, **kwargs):
+        super(JSONDict, self).__init__(**kwargs)
+
+    def __str__(self):
+        return json.dumps(self)
+
+
 class TagsField(models.TextField):
     """
     This custom field handles converting data from a dict to a json and back
@@ -18,18 +27,18 @@ class TagsField(models.TextField):
 
     def from_db_value(self, value, expression, connection, context):
         if value is None:
-            return {}
+            return JSONDict()
         else:
-            return json.loads(value)
+            return JSONDict(**json.loads(value))
 
     def to_python(self, value):
         if value is None:
-            return {}
+            return JSONDict()
         elif isinstance(value, dict):
-            return value
+            return JSONDict(**value)
         elif isinstance(value, str):
             try:
-                return json.loads(value)
+                return JSONDict(**json.loads(value))
             except ValueError as e:
                 raise ValidationError('The value `%(value)s` could not be converted to JSON (%(error)s)',
                                       params={'value': value, 'error': str(e)}, code='invalid')
@@ -69,6 +78,7 @@ class Project(models.Model):
     name = models.CharField(max_length=55, unique=True)
     description = models.TextField()
     user_created = models.ForeignKey(User, on_delete=models.PROTECT)
+    created = models.DateTimeField("created", auto_now_add=True)
 
     def __str__(self):
         return self.name
@@ -78,16 +88,18 @@ class ProjectMeta(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     key = models.CharField(max_length=55, unique=True)
     user_created = models.ForeignKey(User, on_delete=models.PROTECT)
+    created = models.DateTimeField("created", auto_now_add=True)
     value = models.TextField()
     tags = TagsField()
 
     def __str__(self):
-        return "%s => %s" % (self.key, self.value)
+        return "%s = %s" % (self.key, self.value)
 
 
 class Location(models.Model):
-    user_created = models.ForeignKey(User, on_delete=models.PROTECT)
     name = models.CharField(max_length=55, unique=True)
+    user_created = models.ForeignKey(User, on_delete=models.PROTECT)
+    created = models.DateTimeField("created", auto_now_add=True)
     description = models.TextField(blank=True)
     geometry = models.TextField(blank=True)
 
@@ -99,19 +111,21 @@ class LocationMeta(models.Model):
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
     key = models.CharField(max_length=55, unique=True)
     user_created = models.ForeignKey(User, on_delete=models.PROTECT)
+    created = models.DateTimeField("created", auto_now_add=True)
     value = models.TextField()
     tags = TagsField()
 
     def __str__(self):
-        return "%s => %s" % (self.key, self.value)
+        return "%s = %s" % (self.key, self.value)
 
 
 class Sample(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     user_created = models.ForeignKey(User, on_delete=models.PROTECT)
+    created = models.DateTimeField("created", auto_now_add=True)
     sample_id = models.CharField(max_length=55, unique=True)
     location = models.ForeignKey(Location, on_delete=models.PROTECT, blank=True, null=True)
-    collected = models.DateTimeField()
+    collected = models.DateTimeField("collected")
     qualifiers = TagsField()
     comment = models.TextField(blank=True)
 
@@ -122,22 +136,36 @@ class Sample(models.Model):
 class SampleMetaKey(models.Model):
     name = models.CharField(max_length=55, unique=True)
     user_created = models.ForeignKey(User, on_delete=models.PROTECT)
-    short_name = models.CharField(max_length=55, blank=True)
+    created = models.DateTimeField("created", auto_now_add=True)
+    short_name = models.CharField(max_length=55, blank=True, unique=True)
     description = models.TextField(blank=True)
 
     def __str__(self):
-        return self.name
+        return self.short_name if self.short_name else self.name
+
+
+class Unit(models.Model):
+    name = models.CharField(max_length=55, unique=True)
+    user_created = models.ForeignKey(User, on_delete=models.PROTECT)
+    created = models.DateTimeField("created", auto_now_add=True)
+    short_name = models.CharField(max_length=55, blank=True, unique=True)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.short_name if self.short_name else self.name
 
 
 class SampleMeta(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
     user_created = models.ForeignKey(User, on_delete=models.PROTECT)
+    created = models.DateTimeField("created", auto_now_add=True)
     key = models.ForeignKey(SampleMetaKey, on_delete=models.PROTECT)
-    string_value = models.CharField(max_length=255)
-    numeric_value = models.FloatField(blank=True)
-    non_detect = models.BooleanField(blank=True, default=None)
-    comment = models.TextField()
+    value = models.FloatField(blank=True, null=True)
+    unit = models.ForeignKey(Unit, on_delete=models.PROTECT, blank=True, null=True)
+    RDL = models.FloatField(blank=True, null=True)
+    non_detect = models.BooleanField(default=False)
+    comment = models.TextField(blank=True)
     tags = TagsField()
 
     def __str__(self):
-        return "%s => %s" % (self.key, self.string_value)
+        return "%s = %s" % (self.key, self.value)
