@@ -86,11 +86,14 @@ class Project(models.Model):
 
 class ProjectMeta(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    key = models.CharField(max_length=55, unique=True)
+    key = models.CharField(max_length=55)
     user_created = models.ForeignKey(User, on_delete=models.PROTECT)
     created = models.DateTimeField("created", auto_now_add=True)
     value = models.TextField()
     tags = TagsField()
+
+    class Meta:
+        unique_together = ('project', 'key',)
 
     def __str__(self):
         return "%s = %s" % (self.key, self.value)
@@ -114,6 +117,9 @@ class LocationMeta(models.Model):
     created = models.DateTimeField("created", auto_now_add=True)
     value = models.TextField()
     tags = TagsField()
+
+    class Meta:
+        unique_together = ('location', 'key',)
 
     def __str__(self):
         return "%s = %s" % (self.key, self.value)
