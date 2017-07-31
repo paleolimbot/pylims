@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sample Meta Keys</title>
+</head>
+<body>
+
+{% if samplemetakey_list %}
+    <ul>
+    {% for samplemetakey in samplemetakey_list %}
+        <li><a href="{% url 'pylims:samplemetakey_detail' samplemetakey.id %}">{{ samplemetakey.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No sample meta keys are available.</p>
+{% endif %}
+
+
+</body>
+</html>

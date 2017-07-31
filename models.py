@@ -6,6 +6,12 @@ from django.contrib.auth.models import User
 
 
 class JSONDict(dict):
+    """
+    This is a custom dict that simply replaces the __str__ method with a JSON
+    string instead of a dict string. This is because the default admin panel uses
+    the __str__ method of the field by default, and a using a regular dict causes
+    JSON syntax errors when these objects are modified.
+    """
 
     def __init__(self, **kwargs):
         super(JSONDict, self).__init__(**kwargs)
@@ -132,8 +138,8 @@ class Sample(models.Model):
     sample_id = models.CharField(max_length=55, unique=True)
     location = models.ForeignKey(Location, on_delete=models.PROTECT, blank=True, null=True)
     collected = models.DateTimeField("collected")
-    qualifiers = TagsField()
     comment = models.TextField(blank=True)
+    tags = TagsField()
 
     def __str__(self):
         return self.sample_id
