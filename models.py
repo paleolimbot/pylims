@@ -1,6 +1,7 @@
 import json
 from django.db import models
 from django import forms
+from django.core import serializers
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
@@ -86,6 +87,9 @@ class Project(models.Model):
     user_created = models.ForeignKey(User, on_delete=models.PROTECT)
     created = models.DateTimeField("created", auto_now_add=True)
 
+    def as_json(self):
+        return serializers.serialize("json", [self, ])
+
     def __str__(self):
         return self.name
 
@@ -111,6 +115,9 @@ class Location(models.Model):
     created = models.DateTimeField("created", auto_now_add=True)
     description = models.TextField(blank=True)
     geometry = models.TextField(blank=True)
+
+    def as_json(self):
+        return serializers.serialize("json", [self, ])
 
     def __str__(self):
         return self.name
@@ -141,6 +148,9 @@ class Sample(models.Model):
     comment = models.TextField(blank=True)
     tags = TagsField()
 
+    def as_json(self):
+        return serializers.serialize("json", [self, ])
+
     def __str__(self):
         return self.sample_id
 
@@ -152,6 +162,9 @@ class SampleMetaKey(models.Model):
     short_name = models.CharField(max_length=55, blank=True, unique=True)
     description = models.TextField(blank=True)
 
+    def as_json(self):
+        return serializers.serialize("json", [self, ])
+
     def __str__(self):
         return self.short_name if self.short_name else self.name
 
@@ -162,6 +175,9 @@ class Unit(models.Model):
     created = models.DateTimeField("created", auto_now_add=True)
     short_name = models.CharField(max_length=55, blank=True, unique=True)
     description = models.TextField(blank=True)
+
+    def as_json(self):
+        return serializers.serialize("json", [self, ])
 
     def __str__(self):
         return self.short_name if self.short_name else self.name
@@ -178,6 +194,9 @@ class SampleMeta(models.Model):
     non_detect = models.BooleanField(default=False)
     comment = models.TextField(blank=True)
     tags = TagsField()
+
+    def as_json(self):
+        return serializers.serialize("json", [self, ])
 
     def __str__(self):
         return "%s = %s" % (self.key, self.value)
