@@ -6,6 +6,11 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
 
+def pretty_json(obj):
+    jsstr = serializers.serialize("json", [obj, ])
+    return json.dumps(json.loads(jsstr)[0], indent=4)
+
+
 class JSONDict(dict):
     """
     This is a custom dict that simply replaces the __str__ method with a JSON
@@ -88,7 +93,7 @@ class Project(models.Model):
     created = models.DateTimeField("created", auto_now_add=True)
 
     def as_json(self):
-        return serializers.serialize("json", [self, ])
+        return pretty_json(self)
 
     def __str__(self):
         return self.name
@@ -117,7 +122,7 @@ class Location(models.Model):
     geometry = models.TextField(blank=True)
 
     def as_json(self):
-        return serializers.serialize("json", [self, ])
+        return pretty_json(self)
 
     def __str__(self):
         return self.name
@@ -149,7 +154,7 @@ class Sample(models.Model):
     tags = TagsField()
 
     def as_json(self):
-        return serializers.serialize("json", [self, ])
+        return pretty_json(self)
 
     def __str__(self):
         return self.sample_id
@@ -163,7 +168,7 @@ class SampleMetaKey(models.Model):
     description = models.TextField(blank=True)
 
     def as_json(self):
-        return serializers.serialize("json", [self, ])
+        return pretty_json(self)
 
     def __str__(self):
         return self.short_name if self.short_name else self.name
@@ -177,7 +182,7 @@ class Unit(models.Model):
     description = models.TextField(blank=True)
 
     def as_json(self):
-        return serializers.serialize("json", [self, ])
+        return pretty_json(self)
 
     def __str__(self):
         return self.short_name if self.short_name else self.name
@@ -196,7 +201,7 @@ class SampleMeta(models.Model):
     tags = TagsField()
 
     def as_json(self):
-        return serializers.serialize("json", [self, ])
+        return pretty_json(self)
 
     def __str__(self):
         return "%s = %s" % (self.key, self.value)
