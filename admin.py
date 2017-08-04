@@ -12,23 +12,11 @@ text_overrides = {
 
 
 # setup inline admins
-class ProjectMetaInline(admin.TabularInline):
-    model = models.ProjectMeta
-    formfield_overrides = text_overrides
-
-
 class ProjectAdmin(VersionAdmin):
-    inlines = [ProjectMetaInline]
-    formfield_overrides = text_overrides
-
-
-class LocationMetaInline(admin.TabularInline):
-    model = models.LocationMeta
     formfield_overrides = text_overrides
 
 
 class LocationAdmin(VersionAdmin):
-    inlines = [LocationMetaInline]
     formfield_overrides = text_overrides
 
 
@@ -42,16 +30,21 @@ class SampleAdmin(VersionAdmin):
     formfield_overrides = text_overrides
 
 
-class SampleMetaKeyAdmin(VersionAdmin):
+class ParameterAdmin(VersionAdmin):
     formfield_overrides = text_overrides
 
 
 class UnitAdmin(VersionAdmin):
     formfield_overrides = text_overrides
 
+
+class DataViewAdmin(VersionAdmin):
+    formfield_overrides = text_overrides
+
 # register models with the admin site
 admin.site.register(models.Project, ProjectAdmin)
 admin.site.register(models.Location, LocationAdmin)
 admin.site.register(models.Sample, SampleAdmin)
-admin.site.register(models.SampleMetaKey, SampleMetaKeyAdmin)
+admin.site.register(models.Parameter, ParameterAdmin)
 admin.site.register(models.Unit, UnitAdmin)
+admin.site.register(models.DataView, DataViewAdmin)

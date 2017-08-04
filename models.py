@@ -1,4 +1,5 @@
 import json
+import re
 from django.db import models
 from django import forms
 from django.core import serializers
@@ -89,37 +90,24 @@ class TagsField(models.TextField):
 class Project(models.Model):
     name = models.CharField(max_length=55, unique=True)
     description = models.TextField()
-    user_created = models.ForeignKey(User, on_delete=models.PROTECT)
+    user_created = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
     created = models.DateTimeField("created", auto_now_add=True)
+    tags = TagsField()
 
     def as_json(self):
         return pretty_json(self)
 
     def __str__(self):
         return self.name
-
-
-class ProjectMeta(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    key = models.CharField(max_length=55)
-    user_created = models.ForeignKey(User, on_delete=models.PROTECT)
-    created = models.DateTimeField("created", auto_now_add=True)
-    value = models.TextField()
-    tags = TagsField()
-
-    class Meta:
-        unique_together = ('project', 'key',)
-
-    def __str__(self):
-        return "%s = %s" % (self.key, self.value)
 
 
 class Location(models.Model):
     name = models.CharField(max_length=55, unique=True)
-    user_created = models.ForeignKey(User, on_delete=models.PROTECT)
+    user_created = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
     created = models.DateTimeField("created", auto_now_add=True)
     description = models.TextField(blank=True)
     geometry = models.TextField(blank=True)
+    tags = TagsField()
 
     def as_json(self):
         return pretty_json(self)
@@ -128,28 +116,13 @@ class Location(models.Model):
         return self.name
 
 
-class LocationMeta(models.Model):
-    location = models.ForeignKey(Location, on_delete=models.CASCADE)
-    key = models.CharField(max_length=55, unique=True)
-    user_created = models.ForeignKey(User, on_delete=models.PROTECT)
-    created = models.DateTimeField("created", auto_now_add=True)
-    value = models.TextField()
-    tags = TagsField()
-
-    class Meta:
-        unique_together = ('location', 'key',)
-
-    def __str__(self):
-        return "%s = %s" % (self.key, self.value)
-
-
 class Sample(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    user_created = models.ForeignKey(User, on_delete=models.PROTECT)
+    user_created = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
     created = models.DateTimeField("created", auto_now_add=True)
-    sample_id = models.CharField(max_length=55, unique=True)
+    sample_id = models.CharField(max_length=55, unique=True, null=True, blank=True)
     location = models.ForeignKey(Location, on_delete=models.PROTECT, blank=True, null=True)
-    collected = models.DateTimeField("collected")
+    collected = models.DateTimeField("collected", blank=True, null=True)
     comment = models.TextField(blank=True)
     tags = TagsField()
 
@@ -160,11 +133,11 @@ class Sample(models.Model):
         return self.sample_id
 
 
-class SampleMetaKey(models.Model):
+class Parameter(models.Model):
     name = models.CharField(max_length=55, unique=True)
-    user_created = models.ForeignKey(User, on_delete=models.PROTECT)
+    user_created = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
     created = models.DateTimeField("created", auto_now_add=True)
-    short_name = models.CharField(max_length=55, blank=True, unique=True)
+    short_name = models.CharField(max_length=55, blank=True, unique=True, null=True)
     description = models.TextField(blank=True)
 
     def as_json(self):
@@ -176,9 +149,9 @@ class SampleMetaKey(models.Model):
 
 class Unit(models.Model):
     name = models.CharField(max_length=55, unique=True)
-    user_created = models.ForeignKey(User, on_delete=models.PROTECT)
+    user_created = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
     created = models.DateTimeField("created", auto_now_add=True)
-    short_name = models.CharField(max_length=55, blank=True, unique=True)
+    short_name = models.CharField(max_length=55, blank=True, unique=True, null=True)
     description = models.TextField(blank=True)
 
     def as_json(self):
@@ -190,9 +163,9 @@ class Unit(models.Model):
 
 class SampleMeta(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
-    user_created = models.ForeignKey(User, on_delete=models.PROTECT)
+    user_created = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
     created = models.DateTimeField("created", auto_now_add=True)
-    key = models.ForeignKey(SampleMetaKey, on_delete=models.PROTECT)
+    param = models.ForeignKey(Parameter, on_delete=models.PROTECT)
     value = models.FloatField(blank=True, null=True)
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, blank=True, null=True)
     RDL = models.FloatField(blank=True, null=True)
@@ -204,4 +177,38 @@ class SampleMeta(models.Model):
         return pretty_json(self)
 
     def __str__(self):
-        return "%s = %s" % (self.key, self.value)
+        return "%s = %s" % (self.param, self.value)
+
+
+class DataView(models.Model):
+    user_created = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
+    created = models.DateTimeField("created", auto_now_add=True)
+    mapping = TagsField()
+
+    def parse_column_spec(self, spec):
+        column_spec_re = re.compile(r"^(.+?)\.(.+)$")
+        obj, attr = column_spec_re.match(spec).groups()
+        if obj == "sample":
+            if attr in ("sample_id", "comment", "location", "collected"):
+                def f(sample):
+                    return [getattr(sample, attr), ]
+            else:
+                def f(sample):
+                    return [sample.tags[attr] if attr in sample.tags else None, ]
+        else:
+            def f(sample):
+                params = Parameter.objects.filter(short_name=obj)
+                if params:
+                    metas = SampleMeta.objects.filter(sample=sample, param=params[0])
+                    if attr in ("created", "value", "unit", "RDL", "non_detect", "comment"):
+                        return [getattr(meta, attr) for meta in metas]
+                    else:
+                        return [meta.tags[attr] if attr in meta.tags else None for meta in metas]
+                else:
+                    raise ValueError("No such parameter: %s" % obj)
+        return f
+
+    def render_table(self, samples):
+        funcs = [self.parse_column_spec(col) for col in self.mapping["columns"]]
+        data = [[func(sample) for func in funcs] for sample in samples]
+        return data
