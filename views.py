@@ -35,17 +35,17 @@ class LocationDetailView(generic.DetailView):
     template_name = 'pylims/location.html'
 
 
-class SampleMetaKeyListView(generic.ListView):
-    template_name = 'pylims/samplemetakey_list.html'
-    context_object_name = 'samplemetakey_list'
+class ParameterListView(generic.ListView):
+    template_name = 'pylims/parameter_list.html'
+    context_object_name = 'parameter_list'
 
     def get_queryset(self):
-        return models.SampleMetaKey.objects.all
+        return models.Parameter.objects.all
 
 
-class SampleMetaKeyDetailView(generic.DetailView):
-    model = models.SampleMetaKey
-    template_name = 'pylims/samplemetakey.html'
+class ParameterDetailView(generic.DetailView):
+    model = models.Parameter
+    template_name = 'pylims/parameter.html'
 
 
 class SampleListView(generic.ListView):
