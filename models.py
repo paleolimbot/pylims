@@ -191,19 +191,19 @@ class DataView(models.Model):
         if obj == "sample":
             if attr in ("sample_id", "comment", "location", "collected"):
                 def f(sample):
-                    return [getattr(sample, attr), ]
+                    return getattr(sample, attr)
             else:
                 def f(sample):
-                    return [sample.tags[attr] if attr in sample.tags else None, ]
+                    return sample.tags[attr] if attr in sample.tags else None
         else:
             def f(sample):
                 params = Parameter.objects.filter(short_name=obj)
                 if params:
                     metas = SampleMeta.objects.filter(sample=sample, param=params[0])
                     if attr in ("created", "value", "unit", "RDL", "non_detect", "comment"):
-                        return [getattr(meta, attr) for meta in metas]
+                        return {meta.pk: getattr(meta, attr) for meta in metas}
                     else:
-                        return [meta.tags[attr] if attr in meta.tags else None for meta in metas]
+                        return {meta.pk: meta.tags[attr] if attr in meta.tags else None for meta in metas}
                 else:
                     raise ValueError("No such parameter: %s" % obj)
         return f
