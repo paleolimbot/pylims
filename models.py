@@ -33,7 +33,7 @@ class TagsField(models.TextField):
     """
 
     def __init__(self, *args, **kwargs):
-        kwargs['default'] = '{}'
+        kwargs['default'] = {}
         kwargs['blank'] = True
         kwargs['null'] = True
         super(TagsField, self).__init__(*args, **kwargs)
@@ -41,11 +41,15 @@ class TagsField(models.TextField):
     def from_db_value(self, value, expression, connection, context):
         if value is None:
             return JSONDict()
+        elif value == '':
+            return JSONDict()
         else:
             return JSONDict(**json.loads(value))
 
     def to_python(self, value):
         if value is None:
+            return JSONDict()
+        elif value == '':
             return JSONDict()
         elif isinstance(value, dict):
             return JSONDict(**value)
@@ -61,7 +65,9 @@ class TagsField(models.TextField):
 
     def get_prep_value(self, value):
         if value is None:
-            return '{}'
+            return None
+        elif isinstance(value, dict) and (len(value) == 0):
+            return None
         elif isinstance(value, dict):
             return json.dumps(value)
         elif isinstance(value, str):

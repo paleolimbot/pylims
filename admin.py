@@ -11,13 +11,35 @@ text_overrides = {
 }
 
 
+# define base class that all models inherit
+class PylimsAdmin(VersionAdmin):
+    formfield_overrides = text_overrides
+
+    def save_model(self, request, obj, form, change):
+        # save created user from admin login
+        if obj.user_created is None:
+            obj.user_created = request.user
+        obj.save()
+
+    def save_formset(self, request, form, formset, change):
+        if formset.model == models.SampleMeta:
+            instances = formset.save(commit=False)
+            for instance in instances:
+                # save created user from admin site
+                if instance.user_created is None:
+                    instance.user_created = request.user
+                instance.save()
+        else:
+            formset.save()
+
+
 # setup inline admins
-class ProjectAdmin(VersionAdmin):
-    formfield_overrides = text_overrides
+class ProjectAdmin(PylimsAdmin):
+    pass
 
 
-class LocationAdmin(VersionAdmin):
-    formfield_overrides = text_overrides
+class LocationAdmin(PylimsAdmin):
+    pass
 
 
 class SampleMetaInline(admin.TabularInline):
@@ -25,21 +47,20 @@ class SampleMetaInline(admin.TabularInline):
     formfield_overrides = text_overrides
 
 
-class SampleAdmin(VersionAdmin):
+class SampleAdmin(PylimsAdmin):
     inlines = [SampleMetaInline]
-    formfield_overrides = text_overrides
 
 
-class ParameterAdmin(VersionAdmin):
-    formfield_overrides = text_overrides
+class ParameterAdmin(PylimsAdmin):
+    pass
 
 
-class UnitAdmin(VersionAdmin):
-    formfield_overrides = text_overrides
+class UnitAdmin(PylimsAdmin):
+    pass
 
 
-class DataViewAdmin(VersionAdmin):
-    formfield_overrides = text_overrides
+class DataViewAdmin(PylimsAdmin):
+    pass
 
 # register models with the admin site
 admin.site.register(models.Project, ProjectAdmin)
