@@ -24,7 +24,32 @@ class JSONDict(dict):
         super(JSONDict, self).__init__(**kwargs)
 
     def __str__(self):
-        return json.dumps(self)
+        if self:
+            return json.dumps(self)
+        else:
+            return ""
+
+    def __repr__(self):
+        return str(self)
+
+    def __eq__(self, other):
+        if isinstance(other, dict):
+            return dict(self) == dict(other)
+        elif isinstance(other, str):
+            if not bool(self) and not bool(other):
+                return True
+            try:
+                return dict(self) == json.loads(other)
+            except ValueError:
+                return False
+        else:
+            try:
+                return not bool(self) and not bool(other)
+            except:
+                return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class TagsField(models.TextField):
@@ -33,9 +58,9 @@ class TagsField(models.TextField):
     """
 
     def __init__(self, *args, **kwargs):
-        kwargs['default'] = {}
+        kwargs['default'] = '{}'
         kwargs['blank'] = True
-        kwargs['null'] = True
+        kwargs['null'] = False
         super(TagsField, self).__init__(*args, **kwargs)
 
     def from_db_value(self, value, expression, connection, context):
@@ -65,9 +90,9 @@ class TagsField(models.TextField):
 
     def get_prep_value(self, value):
         if value is None:
-            return None
+            return ""
         elif isinstance(value, dict) and (len(value) == 0):
-            return None
+            return ""
         elif isinstance(value, dict):
             return json.dumps(value)
         elif isinstance(value, str):
@@ -78,9 +103,12 @@ class TagsField(models.TextField):
 
     def deconstruct(self):
         name, path, args, kwargs = super(TagsField, self).deconstruct()
-        del kwargs['default']
-        del kwargs['blank']
-        del kwargs['null']
+        if 'default' in kwargs:
+            del kwargs['default']
+        if 'blank' in kwargs:
+            del kwargs['blank']
+        if 'null' in kwargs:
+            del kwargs['null']
         return name, path, args, kwargs
 
     def formfield(self, **kwargs):
