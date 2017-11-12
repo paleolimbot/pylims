@@ -113,3 +113,38 @@ class SampleDataView(DataView):
                 self.params[item] = param[0]
             if obj != "" and attr in meta_fields:
                 self.fields[item] = meta_fields[attr]
+
+
+# class DataView(models.Model):
+#     user_created = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
+#     created = models.DateTimeField("created", auto_now_add=True)
+#     mapping = models.TextField()
+#
+#     def parse_column_spec(self, spec):
+#         column_spec_re = re.compile(r"^(.+?)\.(.+)$")
+#         obj, attr = column_spec_re.match(spec).groups()
+#         if obj == "sample":
+#             if attr in ("sample_id", "comment", "location", "collected"):
+#                 def f(sample):
+#                     return getattr(sample, attr)
+#             else:
+#                 def f(sample):
+#                     return sample.tags[attr] if attr in sample.tags else None
+#         else:
+#             def f(sample):
+#                 params = Parameter.objects.filter(short_name=obj)
+#                 if params:
+#                     metas = SampleMeta.objects.filter(sample=sample, param=params[0])
+#                     if attr in ("created", "value", "unit", "RDL", "non_detect", "comment"):
+#                         return {meta.pk: getattr(meta, attr) for meta in metas}
+#                     else:
+#                         return {meta.pk: meta.tags[attr] if attr in meta.tags else None for meta in metas}
+#                 else:
+#                     raise ValueError("No such parameter: %s" % obj)
+#         return f
+#
+#     def render_table(self, samples):
+#         mapping = json.loads(self.mapping)
+#         funcs = [self.parse_column_spec(col) for col in mapping["columns"]]
+#         data = [[func(sample) for func in funcs] for sample in samples]
+#         return data

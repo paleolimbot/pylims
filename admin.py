@@ -22,7 +22,7 @@ class PylimsAdmin(VersionAdmin):
         obj.save()
 
     def save_formset(self, request, form, formset, change):
-        if formset.model == models.SampleMeta:
+        if formset.model == models.Measurement:
             instances = formset.save(commit=False)
             for instance in instances:
                 # save created user from admin site
@@ -42,24 +42,23 @@ class LocationAdmin(PylimsAdmin):
     pass
 
 
-class SampleMetaInline(admin.TabularInline):
-    model = models.SampleMeta
+class SampleTagInline(admin.TabularInline):
+    model = models.SampleTag
     formfield_overrides = text_overrides
+    extra = 1
+
+
+class MeasurementInline(admin.TabularInline):
+    model = models.Measurement
+    formfield_overrides = text_overrides
+    extra = 1
 
 
 class SampleAdmin(PylimsAdmin):
-    inlines = [SampleMetaInline]
+    inlines = [SampleTagInline, MeasurementInline]
 
 
 class ParameterAdmin(PylimsAdmin):
-    pass
-
-
-class UnitAdmin(PylimsAdmin):
-    pass
-
-
-class DataViewAdmin(PylimsAdmin):
     pass
 
 # register models with the admin site
@@ -67,5 +66,3 @@ admin.site.register(models.Project, ProjectAdmin)
 admin.site.register(models.Location, LocationAdmin)
 admin.site.register(models.Sample, SampleAdmin)
 admin.site.register(models.Parameter, ParameterAdmin)
-admin.site.register(models.Unit, UnitAdmin)
-admin.site.register(models.DataView, DataViewAdmin)

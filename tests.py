@@ -21,14 +21,9 @@ def create_base_data():
     alk.save()
 
     # create some samples and some random data
-    samples = [Sample(project=proj, sample_id="Sample%d" % n) for n in range(5)]
+    samples = [Sample(project=proj, user_id="Sample%d" % n) for n in range(5)]
     for sample in samples:
         sample.save()
         for param in (pH, alk):
-            meta = SampleMeta(sample=sample, param=param, value=np.random.uniform())
+            meta = Measurement(sample=sample, param=param, value=np.random.uniform())
             meta.save()
-
-    # create a dataview
-    dv = DataView(mapping={
-        "columns": ["sample.sample_id", "sample.collected", "pH.value", "alk.value"]
-    })
