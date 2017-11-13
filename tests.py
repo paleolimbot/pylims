@@ -5,7 +5,7 @@ import numpy as np
 
 def create_base_data():
     # create a project, two locations, and two parameters
-    proj = Project(name="fish", description="fishy")
+    proj = Project(name="fish")
     proj.save()
 
     loc1 = Location(name="location1")
@@ -14,14 +14,14 @@ def create_base_data():
     loc2 = Location(name="location2")
     loc2.save()
 
-    pH = Parameter(name="pH", short_name="pH")
+    pH = Parameter(name="pH")
     pH.save()
 
-    alk = Parameter(name="Alkalinity", short_name="alk")
+    alk = Parameter(name="Alkalinity", slug="alk")
     alk.save()
 
     # create some samples and some random data
-    samples = [Sample(project=proj, user_id="Sample%d" % n) for n in range(5)]
+    samples = [Sample(project=proj, name="Sample %d" % n) for n in range(5)]
     for sample in samples:
         sample.save()
         for param in (pH, alk):

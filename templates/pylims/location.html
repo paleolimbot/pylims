@@ -1,16 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Location: {{ location.name }}</title>
-</head>
-<body>
+{% extends "pylims/base.html" %}
 
-<h1>{{ location.name }}</h1>
+{% block title %}{{ location.name }}{% endblock %}
 
+{% block content_title %}Location: {{ location.name }}{% endblock %}
+
+{% block content_main %}
 <pre>
     {{ location.as_json }}
 </pre>
-
-</body>
-</html>
+{% endblock %}

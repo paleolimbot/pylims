@@ -1,16 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Sample Meta Key: {{ samplemetakey.name }}</title>
-</head>
-<body>
+{% extends "pylims/base.html" %}
 
-<h1>{{ samplemetakey.name }}</h1>
+{% block title %}{{ parameter.name }}{% endblock %}
 
-<pre>
-    {{ samplemetakey.as_json }}
-</pre>
+{% block content_title %}Parameter: {{ parameter.name }}{% endblock %}
 
-</body>
-</html>
+{% block content_main %}
+
+    <pre>
+        {{ parameter.as_json }}
+    </pre>
+
+{% endblock %}

@@ -1,21 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Samples</title>
-</head>
-<body>
+{% extends "pylims/base.html" %}
 
-{% if sample_list %}
-    <ul>
-    {% for sample in sample_list %}
-        <li><a href="{% url 'pylims:sample_detail' sample.id %}">{{ sample.sample_id }}</a></li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No samples are available.</p>
-{% endif %}
+{% block title %}Samples{% endblock %}
 
+{% block content_title %}Samples{% endblock %}
 
-</body>
-</html>
+{% block content_main %}
+
+    {% if sample_list %}
+        <ul>
+        {% for sample in sample_list %}
+            <li><a href="{% url 'pylims:sample_detail' sample.id %}">{{ sample.slug }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No samples are available.</p>
+    {% endif %}
+
+{% endblock %}

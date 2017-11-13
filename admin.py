@@ -17,8 +17,8 @@ class PylimsAdmin(VersionAdmin):
 
     def save_model(self, request, obj, form, change):
         # save created user from admin login
-        if obj.user_created is None:
-            obj.user_created = request.user
+        if obj.user is None:
+            obj.user = request.user
         obj.save()
 
     def save_formset(self, request, form, formset, change):
@@ -26,20 +26,24 @@ class PylimsAdmin(VersionAdmin):
             instances = formset.save(commit=False)
             for instance in instances:
                 # save created user from admin site
-                if instance.user_created is None:
-                    instance.user_created = request.user
+                if instance.user is None:
+                    instance.user = request.user
                 instance.save()
         else:
             formset.save()
 
 
 # setup inline admins
-class ProjectAdmin(PylimsAdmin):
-    pass
+class ProjectTagInline(admin.TabularInline):
+    model = models.ProjectTag
+    formfield_overrides = text_overrides
+    extra = 1
 
 
-class LocationAdmin(PylimsAdmin):
-    pass
+class LocationTagInline(admin.TabularInline):
+    model = models.LocationTag
+    formfield_overrides = text_overrides
+    extra = 1
 
 
 class SampleTagInline(admin.TabularInline):
@@ -54,12 +58,30 @@ class MeasurementInline(admin.TabularInline):
     extra = 1
 
 
+class ParameterTagInline(admin.TabularInline):
+    model = models.ParameterTag
+    formfield_overrides = text_overrides
+    extra = 1
+
+
+# setup admins
+class ProjectAdmin(PylimsAdmin):
+    inlines = [ProjectTagInline, ]
+    prepopulated_fields = {"slug": ("name",)}
+
+
+class LocationAdmin(PylimsAdmin):
+    inlines = [LocationTagInline, ]
+    prepopulated_fields = {"slug": ("name",)}
+
+
 class SampleAdmin(PylimsAdmin):
     inlines = [SampleTagInline, MeasurementInline]
 
 
 class ParameterAdmin(PylimsAdmin):
-    pass
+    inlines = [ParameterTagInline, ]
+    prepopulated_fields = {"slug": ("name",)}
 
 # register models with the admin site
 admin.site.register(models.Project, ProjectAdmin)

@@ -1,21 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Locations</title>
-</head>
-<body>
+{% extends "pylims/base.html" %}
 
-{% if location_list %}
-    <ul>
-    {% for location in location_list %}
-        <li><a href="{% url 'pylims:location_detail' location.id %}">{{ location.name }}</a></li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No locations are available.</p>
-{% endif %}
+{% block title %}Locations{% endblock %}
 
+{% block content_title %}Locations{% endblock %}
 
-</body>
-</html>
+{% block content_main %}
+
+    {% if location_list %}
+        <ul>
+        {% for location in location_list %}
+            <li><a href="{% url 'pylims:location_detail' location.id %}">{{ location.name }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No locations are available.</p>
+    {% endif %}
+
+{% endblock %}

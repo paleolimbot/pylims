@@ -1,21 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Sample Meta Keys</title>
-</head>
-<body>
+{% extends "pylims/base.html" %}
 
-{% if samplemetakey_list %}
-    <ul>
-    {% for samplemetakey in samplemetakey_list %}
-        <li><a href="{% url 'pylims:samplemetakey_detail' samplemetakey.id %}">{{ samplemetakey.name }}</a></li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No sample meta keys are available.</p>
-{% endif %}
+{% block title %}Parameters{% endblock %}
 
+{% block content_title %}Parameters{% endblock %}
 
-</body>
-</html>
+{% block content_main %}
+
+    {% if parameter_list %}
+        <ul>
+        {% for parameter in parameter_list %}
+            <li><a href="{% url 'pylims:parameter_detail' parameter.id %}">{{ parameter.name }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No sample meta keys are available.</p>
+    {% endif %}
+
+{% endblock %}

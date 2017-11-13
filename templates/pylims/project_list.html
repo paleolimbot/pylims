@@ -1,20 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>project list</title>
-</head>
-<body>
+{% extends "pylims/base.html" %}
 
-{% if project_list %}
-    <ul>
-    {% for project in project_list %}
-        <li><a href="{% url 'pylims:project_detail' project.id %}">{{ project.name }}</a></li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No projects are available.</p>
-{% endif %}
+{% block title %}Projects{% endblock %}
 
-</body>
-</html>
+{% block content_title %}Projects{% endblock %}
+
+{% block content_main %}
+
+    {% if project_list %}
+        <ul>
+        {% for project in project_list %}
+            <li><a href="{% url 'pylims:project_detail' project.id %}">{{ project.name }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No projects are available.</p>
+    {% endif %}
+
+{% endblock %}

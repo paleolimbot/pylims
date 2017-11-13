@@ -1,17 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Pylims index</title>
-</head>
-<body>
+{% extends "pylims/base.html" %}
 
+{% block title %}Home{% endblock %}
+
+{% block content_title %}CWRS LIMS Home{% endblock %}
+
+{% block content_main %}
 <ul>
     <li><a href="{% url 'pylims:project_list' %}">Projects</a></li>
     <li><a href="{% url 'pylims:location_list' %}">Locations</a></li>
     <li><a href="{% url 'pylims:sample_list' %}">Samples</a></li>
-    <li><a href="{% url 'pylims:samplemetakey_list' %}">Sample Meta Keys</a></li>
+    <li><a href="{% url 'pylims:parameter_list' %}">Parameters</a></li>
 </ul>
-
-</body>
-</html>
+{% endblock %}
