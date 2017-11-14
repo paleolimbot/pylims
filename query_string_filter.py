@@ -35,9 +35,15 @@ def filter_sample_table(queryset, q):
     Tags:
     tag_* = "" (tag * not defined), = "__exists__" (tag * is defined), = value (tag = value)
     
+    Pagination and ordering
+    n_samples = number of results to show on a page (>1)
+    paged = number of pages in (>1)
+    order_by = values passed to QuerySet.order_by()
+    
+    
     :param queryset: The quereyset of samples to filter
     :param request: The request with a GET attribute
-    :return: The filtered queryset
+    :return: A dictionary with additional context variables for the sample_table.html template
     """
 
     # Date/times:
@@ -104,4 +110,20 @@ def filter_sample_table(queryset, q):
         else:
             queryset = queryset.filter(sampletag__key=tag, sampletag__value__in=values)
 
-    return queryset
+    # Ordering
+    order_by = q.getlist("order_by", ['-modified'])
+    if order_by:
+        queryset = queryset.order_by(*order_by)
+
+    # Pagination
+    n_results_int = int(q.get("n_samples", "100"))
+    paged_int = int(q.get("paged", "1"))
+
+    n_results = max(n_results_int, 1)  # make sure n_results is never negative
+    paged = max(paged_int, 1)  # make sure paged is never negative
+    start = n_results * (paged - 1)
+    end = n_results * paged
+    queryset = queryset[start:end]
+
+    # return the sample list and the query
+    return {"sample_list": queryset, "query": q}

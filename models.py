@@ -41,6 +41,7 @@ class Project(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
     created = models.DateTimeField("created", auto_now_add=True)
+    modified = models.DateTimeField("modified", auto_now=True)
 
     description = models.TextField(blank=True)
 
@@ -58,8 +59,13 @@ class Project(models.Model):
 
 class ProjectTag(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    key = models.CharField(max_length=55)
+    key = models.SlugField(max_length=55)
     value = models.TextField(blank=False)
+
+    def save(self, *args, **kwargs):
+        # update parent param modified tag
+        self.project.modified = datetime.datetime.now()
+        super(ProjectTag, self).save(*args, **kwargs)
 
     def __str__(self):
         return '%s="%s"' %(self.key, self.value)
@@ -72,6 +78,7 @@ class Location(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
     created = models.DateTimeField("created", auto_now_add=True)
+    modified = models.DateTimeField("modified", auto_now=True)
 
     description = models.TextField(blank=True)
     geometry = models.TextField(blank=True)
@@ -90,8 +97,13 @@ class Location(models.Model):
 
 class LocationTag(models.Model):
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
-    key = models.CharField(max_length=55)
+    key = models.SlugField(max_length=55)
     value = models.TextField(blank=False)
+
+    def save(self, *args, **kwargs):
+        # update parent param modified tag
+        self.location.modified = datetime.datetime.now()
+        super(LocationTag, self).save(*args, **kwargs)
 
     def __str__(self):
         return '%s="%s"' %(self.key, self.value)
@@ -104,6 +116,7 @@ class Sample(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
     created = models.DateTimeField("created", auto_now_add=True)
+    modified = models.DateTimeField("modified", auto_now=True)
 
     collected = models.DateTimeField("collected", blank=True, null=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
@@ -149,8 +162,13 @@ class Sample(models.Model):
 
 class SampleTag(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
-    key = models.CharField(max_length=55)
+    key = models.SlugField(max_length=55)
     value = models.TextField(blank=False)
+
+    def save(self, *args, **kwargs):
+        # update parent param modified tag
+        self.sample.modified = datetime.datetime.now()
+        super(SampleTag, self).save(*args, **kwargs)
 
     def __str__(self):
         return '%s="%s"' %(self.key, self.value)
@@ -163,6 +181,7 @@ class Parameter(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
     created = models.DateTimeField("created", auto_now_add=True)
+    modified = models.DateTimeField("modified", auto_now=True)
 
     description = models.TextField(blank=True)
 
@@ -180,8 +199,13 @@ class Parameter(models.Model):
 
 class ParameterTag(models.Model):
     param = models.ForeignKey(Parameter, on_delete=models.CASCADE)
-    key = models.CharField(max_length=55)
+    key = models.SlugField(max_length=55)
     value = models.TextField(blank=False)
+
+    def save(self, *args, **kwargs):
+        # update parent param modified tag
+        self.param.modified = datetime.datetime.now()
+        super(ParameterTag, self).save(*args, **kwargs)
 
     def __str__(self):
         return '%s="%s"' %(self.key, self.value)
@@ -195,6 +219,7 @@ class Measurement(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
     created = models.DateTimeField("created", auto_now_add=True)
+    modified = models.DateTimeField("modified", auto_now=True)
 
     def parse_tags(self):
         return json.load(self.tags)

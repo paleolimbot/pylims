@@ -9,7 +9,7 @@
                     <th>User</th>
                     <th>Project</th>
                     <th>Location</th>
-                    <th>Created</th>
+                    <th>Modified</th>
                     <th>Tags</th>
                     <th>Measurements</th>
                 </tr>
@@ -19,7 +19,7 @@
                 <td><a href="{% url 'pylims:sample_detail' sample.id %}">{{ sample.slug }}</a></td>
                 <td>
                     {% if sample.user %}
-                    <a href="#">{{ sample.user }}</a>
+                    <a href="{% url 'pylims:user_detail' user.id %}">{{ sample.user }}</a>
                     {% endif %}
                 </td>
                 <td>
@@ -31,7 +31,7 @@
                     <a href="{% url 'pylims:location_detail' sample.location.id %}">{{ sample.location }}</a>
                     {% endif %}
                 </td>
-                <td>{{ sample.created }}</td>
+                <td>{{ sample.modified }}</td>
                 <td>
                     {% for tag in sample.sampletag_set.all %}
                       {{ tag }} <br/>

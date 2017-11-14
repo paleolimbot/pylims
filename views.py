@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views import generic
 from django.contrib.auth.models import User
 from . import models
+from .query_string_filter import filter_sample_table
 
 # Create your views here.
 
@@ -26,6 +27,9 @@ class ProjectDetailView(generic.DetailView):
         context = super(ProjectDetailView, self).get_context_data(**kwargs)
         context['sample_list_title'] = "Project Samples"
         context['sample_list'] = models.Sample.objects.filter(project=context['project'])
+        # apply sample list filtering based on query string params
+        sample_list_context = filter_sample_table(context['sample_list'], self.request.GET)
+        context.update(sample_list_context)
         return context
 
 
@@ -45,6 +49,9 @@ class LocationDetailView(generic.DetailView):
         context = super(LocationDetailView, self).get_context_data(**kwargs)
         context['sample_list_title'] = "Samples from %s" % context['location'].name
         context['sample_list'] = models.Sample.objects.filter(location=context['location'])
+        # apply sample list filtering based on query string params
+        sample_list_context = filter_sample_table(context['sample_list'], self.request.GET)
+        context.update(sample_list_context)
         return context
 
 
@@ -64,6 +71,9 @@ class ParameterDetailView(generic.DetailView):
         context = super(ParameterDetailView, self).get_context_data(**kwargs)
         context['sample_list_title'] = "Samples with %s" % context['parameter'].name
         context['sample_list'] = models.Sample.objects.filter(measurement__param=context['parameter'])
+        # apply sample list filtering based on query string params
+        sample_list_context = filter_sample_table(context['sample_list'], self.request.GET)
+        context.update(sample_list_context)
         return context
 
 
@@ -82,6 +92,9 @@ class UserDetailView(generic.DetailView):
         context = super(UserDetailView, self).get_context_data(**kwargs)
         context['sample_list_title'] = "Samples created by %s" % context['user'].username
         context['sample_list'] = models.Sample.objects.filter(user=context['user'])
+        # apply sample list filtering based on query string params
+        sample_list_context = filter_sample_table(context['sample_list'], self.request.GET)
+        context.update(sample_list_context)
         return context
 
 
@@ -92,10 +105,14 @@ class SampleListView(generic.ListView):
     def get_queryset(self):
         return models.Sample.objects.all()
 
+    def get_context_data(self, **kwargs):
+        context = super(SampleListView, self).get_context_data(**kwargs)
+        # apply sample list filtering based on query string params
+        sample_list_context = filter_sample_table(context['sample_list'], self.request.GET)
+        context.update(sample_list_context)
+        return context
+
 
 class SampleDetailView(generic.DetailView):
     template_name = 'pylims/sample.html'
     model = models.Sample
-
-
-
