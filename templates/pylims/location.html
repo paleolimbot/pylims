@@ -5,7 +5,27 @@
 {% block content_title %}Location: {{ location.name }}{% endblock %}
 
 {% block content_main %}
-<pre>
-    {{ location.as_json }}
-</pre>
+    <pre>
+        {{ location.as_json }}
+    </pre>
+
+    {% include "pylims/sample_table.html" %}
+
+{% endblock %}
+
+{% block content_related %}
+
+    <div class="content-related-actions">
+        <h3>User Actions</h3>
+        <ul>
+            <li>(None yet)</li>
+        </ul>
+    </div>
+    <div class="content-related-actions">
+        <h3>Admin Actions</h3>
+        <ul>
+            <li><a href="{% url 'admin:pylims_location_change' location.id %}">Admin View</a></li>
+        </ul>
+    </div>
+
 {% endblock %}

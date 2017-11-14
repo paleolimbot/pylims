@@ -1,16 +1,15 @@
 
 from django.db import models
 from django.forms import Form, formset_factory
-from .models import Parameter, Sample, SampleMeta, Project, Unit, Location
+from .models import Parameter, Sample, SampleTag, Project, Location
 from .data_view_funcs import as_field, parse_column_spec, list_fields, DEFAULT_FIELD
 
 # create a dict so that models can be passed as strings to DataView()
 MODELS = {
     "Parameter": Parameter,
-    "SampleMeta": SampleMeta,
+    "SampleTag": SampleTag,
     "Sample": Sample,
     "Project": Project,
-    "Unit": Unit,
     "Location": Location
 }
 
@@ -91,7 +90,7 @@ class DataView:
 class SampleDataView(DataView):
     """
     Samples are a little different in that they have a two-part specification,
-    with the first part being the short_name of the Parameter, and the second
+    with the first part being the slug of the Parameter, and the second
     part being the field spec as above.
     """
 
@@ -107,7 +106,7 @@ class SampleDataView(DataView):
         for item in self.column_spec:
             obj, attr = parse_column_spec(item)
             if obj != "":
-                param = Parameter.objects.filter(short_name=obj)
+                param = Parameter.objects.filter(slug=obj)
                 if not param:
                     raise ValueError("Parameter `%s` was not found" % obj)
                 self.params[item] = param[0]

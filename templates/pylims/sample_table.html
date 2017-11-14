@@ -1,0 +1,52 @@
+
+{% if sample_list_title %}<h1>{{ sample_list_title }}</h1>{% endif %}
+
+{% if sample_list %}
+        <table class="object-list">
+            <thead>
+                <tr>
+                    <th>Sample ID</th>
+                    <th>User</th>
+                    <th>Project</th>
+                    <th>Location</th>
+                    <th>Created</th>
+                    <th>Tags</th>
+                    <th>Measurements</th>
+                </tr>
+            </thead>
+        {% for sample in sample_list %}
+            <tr>
+                <td><a href="{% url 'pylims:sample_detail' sample.id %}">{{ sample.slug }}</a></td>
+                <td>
+                    {% if sample.user %}
+                    <a href="#">{{ sample.user }}</a>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if sample.project %}
+                    <a href="{% url 'pylims:project_detail' sample.project.id %}">{{ sample.project }}</a>
+                    {% endif %}
+                </td>
+                <td>{% if sample.location %}
+                    <a href="{% url 'pylims:location_detail' sample.location.id %}">{{ sample.location }}</a>
+                    {% endif %}
+                </td>
+                <td>{{ sample.created }}</td>
+                <td>
+                    {% for tag in sample.sampletag_set.all %}
+                      {{ tag }} <br/>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for measurement in sample.measurement_set.all %}
+                        <a href="{% url 'pylims:parameter_detail' measurement.param.id %}">{{ measurement.param }}</a> = {{ measurement.value }}
+                        {% if measurement.tags %} {{ measurement.tags }} {% endif %}<br/>
+                    {% endfor %}
+                </td>
+            </tr>
+
+        {% endfor %}
+        </table>
+    {% else %}
+        <p>No samples are available.</p>
+    {% endif %}

@@ -6,14 +6,24 @@
 
 {% block content_main %}
 
-    {% if sample_list %}
+    {% include "pylims/sample_table.html" %}
+
+{% endblock %}
+
+
+{% block content_related %}
+
+    <div class="content-related-actions">
+        <h3>User Actions</h3>
         <ul>
-        {% for sample in sample_list %}
-            <li><a href="{% url 'pylims:sample_detail' sample.id %}">{{ sample.slug }}</a></li>
-        {% endfor %}
+            <li>(None yet)</li>
         </ul>
-    {% else %}
-        <p>No samples are available.</p>
-    {% endif %}
+    </div>
+    <div class="content-related-actions">
+        <h3>Admin Actions</h3>
+        <ul>
+            <li><a href="{% url 'admin:pylims_sample_changelist' %}">Admin View</a></li>
+        </ul>
+    </div>
 
 {% endblock %}

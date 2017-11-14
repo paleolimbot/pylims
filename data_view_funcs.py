@@ -56,6 +56,7 @@ def parse_column_spec(spec):
     column_spec_re = re.compile(r"^(.*?)::(.+)$")
     return column_spec_re.match(spec).groups()
 
+
 def column_view_old(spec):
     column_spec_re = re.compile(r"^(.+?)\.(.+)$")
     obj, attr = column_spec_re.match(spec).groups()

@@ -1,14 +1,16 @@
 {% extends "pylims/base.html" %}
 
-{% block title %}{{ sample.sample_id }}{% endblock %}
+{% block title %}{{ user.username }}{% endblock %}
 
-{% block content_title %}Sample: {{ sample.sample_id }}{% endblock %}
+{% block content_title %}User: {{ user.username }}{% endblock %}
 
 {% block content_main %}
 
     <pre>
-        {{ sample.as_json }}
+        {{ user.username }}
     </pre>
+
+    {% include "pylims/sample_table.html" %}
 
 {% endblock %}
 
@@ -23,7 +25,7 @@
     <div class="content-related-actions">
         <h3>Admin Actions</h3>
         <ul>
-            <li><a href="{% url 'admin:pylims_sample_change' sample.id %}">Admin View</a></li>
+            <li><a href="{% url 'admin:auth_user_change' user.id %}">Admin View</a></li>
         </ul>
     </div>
 

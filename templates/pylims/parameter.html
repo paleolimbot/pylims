@@ -10,4 +10,23 @@
         {{ parameter.as_json }}
     </pre>
 
+    {% include "pylims/sample_table.html" %}
+
+{% endblock %}
+
+{% block content_related %}
+
+    <div class="content-related-actions">
+        <h3>User Actions</h3>
+        <ul>
+            <li>(None yet)</li>
+        </ul>
+    </div>
+    <div class="content-related-actions">
+        <h3>Admin Actions</h3>
+        <ul>
+            <li><a href="{% url 'admin:pylims_parameter_change' parameter.id %}">Admin View</a></li>
+        </ul>
+    </div>
+
 {% endblock %}
