@@ -84,6 +84,7 @@ class UserDetailView(generic.DetailView):
         context['sample_list'] = models.Sample.objects.filter(user=context['user'])
         return context
 
+
 class SampleListView(generic.ListView):
     template_name = 'pylims/sample_list.html'
     context_object_name = 'sample_list'
@@ -95,4 +96,6 @@ class SampleListView(generic.ListView):
 class SampleDetailView(generic.DetailView):
     template_name = 'pylims/sample.html'
     model = models.Sample
+
+
 
