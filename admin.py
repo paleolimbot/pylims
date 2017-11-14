@@ -69,23 +69,27 @@ class ProjectAdmin(PylimsAdmin):
     inlines = [ProjectTagInline, ]
     prepopulated_fields = {"slug": ("name",)}
     change_list_template = "admin/pylims/project/change_list.html"
+    change_form_template = "admin/pylims/project/change_form.html"
 
 
 class LocationAdmin(PylimsAdmin):
     inlines = [LocationTagInline, ]
     prepopulated_fields = {"slug": ("name",)}
     change_list_template = "admin/pylims/location/change_list.html"
+    change_form_template = "admin/pylims/location/change_form.html"
 
 
 class SampleAdmin(PylimsAdmin):
     inlines = [SampleTagInline, MeasurementInline]
     change_list_template = "admin/pylims/sample/change_list.html"
+    change_form_template = "admin/pylims/sample/change_form.html"
 
 
 class ParameterAdmin(PylimsAdmin):
     inlines = [ParameterTagInline, ]
     prepopulated_fields = {"slug": ("name",)}
     change_list_template = "admin/pylims/parameter/change_list.html"
+    change_form_template = "admin/pylims/parameter/change_form.html"
 
 # register models with the admin site
 admin.site.register(models.Project, ProjectAdmin)
