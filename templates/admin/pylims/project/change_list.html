@@ -1,0 +1,11 @@
+{% extends "reversion/change_list.html" %}
+
+{% block object-tools-items %}
+
+    <li>
+        <a href="{% url 'pylims:project_list' %}">User View</a>
+    </li>
+
+    {{ block.super }}
+
+{% endblock %}

@@ -68,20 +68,24 @@ class ParameterTagInline(admin.TabularInline):
 class ProjectAdmin(PylimsAdmin):
     inlines = [ProjectTagInline, ]
     prepopulated_fields = {"slug": ("name",)}
+    change_list_template = "admin/pylims/project/change_list.html"
 
 
 class LocationAdmin(PylimsAdmin):
     inlines = [LocationTagInline, ]
     prepopulated_fields = {"slug": ("name",)}
+    change_list_template = "admin/pylims/location/change_list.html"
 
 
 class SampleAdmin(PylimsAdmin):
     inlines = [SampleTagInline, MeasurementInline]
+    change_list_template = "admin/pylims/sample/change_list.html"
 
 
 class ParameterAdmin(PylimsAdmin):
     inlines = [ParameterTagInline, ]
     prepopulated_fields = {"slug": ("name",)}
+    change_list_template = "admin/pylims/parameter/change_list.html"
 
 # register models with the admin site
 admin.site.register(models.Project, ProjectAdmin)
