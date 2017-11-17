@@ -91,8 +91,13 @@ class ParameterAdmin(PylimsAdmin):
     change_list_template = "admin/pylims/parameter/change_list.html"
     change_form_template = "admin/pylims/parameter/change_form.html"
 
+class DataImportAdmin(PylimsAdmin):
+    pass
+
 # register models with the admin site
 admin.site.register(models.Project, ProjectAdmin)
 admin.site.register(models.Location, LocationAdmin)
 admin.site.register(models.Sample, SampleAdmin)
 admin.site.register(models.Parameter, ParameterAdmin)
+admin.site.register(models.DataImportDriver)
+admin.site.register(models.DataImport, DataImportAdmin)
