@@ -64,6 +64,12 @@ class ParameterTagInline(admin.TabularInline):
     extra = 1
 
 
+class DataImportTagInline(admin.TabularInline):
+    model = models.DataImportTag
+    formfield_overrides = text_overrides
+    extra = 1
+
+
 # setup admins
 class ProjectAdmin(PylimsAdmin):
     inlines = [ProjectTagInline, ]
@@ -92,12 +98,11 @@ class ParameterAdmin(PylimsAdmin):
     change_form_template = "admin/pylims/parameter/change_form.html"
 
 class DataImportAdmin(PylimsAdmin):
-    pass
+    inlines = [DataImportTagInline, ]
 
 # register models with the admin site
 admin.site.register(models.Project, ProjectAdmin)
 admin.site.register(models.Location, LocationAdmin)
 admin.site.register(models.Sample, SampleAdmin)
 admin.site.register(models.Parameter, ParameterAdmin)
-admin.site.register(models.DataImportDriver)
 admin.site.register(models.DataImport, DataImportAdmin)
