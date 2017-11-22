@@ -1,28 +1,30 @@
 {% extends "pylims/base.html" %}
 
-{% block title %}Samples{% endblock %}
+{% block title %}New Sample{% endblock %}
 
-{% block content_title %}Samples{% endblock %}
+{% block content_title %}New Sample{% endblock %}
 
 {% block content_main %}
 
-    {% include "pylims/sample_table.html" %}
+    <form action="" method="post">{% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Create" />
+    </form>
 
 {% endblock %}
-
 
 {% block content_related %}
 
     <div class="content-related-actions">
         <h3>User Actions</h3>
         <ul>
-            <li><a href="{% url 'pylims:sample_create' %}">New Sample</a></li>
+            <li>(None yet)</li>
         </ul>
     </div>
     <div class="content-related-actions">
         <h3>Admin Actions</h3>
         <ul>
-            <li><a href="{% url 'admin:pylims_sample_changelist' %}">Admin View</a></li>
+            <li><a href="{% url 'admin:pylims_sample_add' %}">Admin View</a></li>
         </ul>
     </div>
 

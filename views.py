@@ -1,17 +1,21 @@
 from django.shortcuts import render
 from django.views import generic
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
 from . import models
 from .query_string_filter import filter_sample_table
 
 # Create your views here.
 
 
+@login_required
 def index(request):
     return render(request, 'pylims/index.html')
 
 
-class ProjectListView(generic.ListView):
+class ProjectListView(LoginRequiredMixin, generic.ListView):
     template_name = 'pylims/project_list.html'
     context_object_name = 'project_list'
 
@@ -19,7 +23,7 @@ class ProjectListView(generic.ListView):
         return models.Project.objects.all()
 
 
-class ProjectDetailView(generic.DetailView):
+class ProjectDetailView(LoginRequiredMixin, generic.DetailView):
     model = models.Project
     template_name = 'pylims/project.html'
 
@@ -33,7 +37,7 @@ class ProjectDetailView(generic.DetailView):
         return context
 
 
-class LocationListView(generic.ListView):
+class LocationListView(LoginRequiredMixin, generic.ListView):
     template_name = 'pylims/location_list.html'
     context_object_name = 'location_list'
 
@@ -41,7 +45,7 @@ class LocationListView(generic.ListView):
         return models.Location.objects.all()
 
 
-class LocationDetailView(generic.DetailView):
+class LocationDetailView(LoginRequiredMixin, generic.DetailView):
     model = models.Location
     template_name = 'pylims/location.html'
 
@@ -55,7 +59,7 @@ class LocationDetailView(generic.DetailView):
         return context
 
 
-class ParameterListView(generic.ListView):
+class ParameterListView(LoginRequiredMixin, generic.ListView):
     template_name = 'pylims/parameter_list.html'
     context_object_name = 'parameter_list'
 
@@ -63,7 +67,7 @@ class ParameterListView(generic.ListView):
         return models.Parameter.objects.all()
 
 
-class ParameterDetailView(generic.DetailView):
+class ParameterDetailView(LoginRequiredMixin, generic.DetailView):
     model = models.Parameter
     template_name = 'pylims/parameter.html'
 
@@ -77,14 +81,14 @@ class ParameterDetailView(generic.DetailView):
         return context
 
 
-class UserListView(generic.ListView):
+class UserListView(LoginRequiredMixin, generic.ListView):
     template_name = 'pylims/user_list.html'
 
     def get_queryset(self):
         return User.objects.all()
 
 
-class UserDetailView(generic.DetailView):
+class UserDetailView(LoginRequiredMixin, generic.DetailView):
     model = User
     template_name = 'pylims/user.html'
 
@@ -98,7 +102,7 @@ class UserDetailView(generic.DetailView):
         return context
 
 
-class SampleListView(generic.ListView):
+class SampleListView(LoginRequiredMixin, generic.ListView):
     template_name = 'pylims/sample_list.html'
     context_object_name = 'sample_list'
 
@@ -113,6 +117,19 @@ class SampleListView(generic.ListView):
         return context
 
 
-class SampleDetailView(generic.DetailView):
+class SampleDetailView(LoginRequiredMixin, generic.DetailView):
     template_name = 'pylims/sample.html'
     model = models.Sample
+
+
+class SampleCreateView(LoginRequiredMixin, generic.CreateView):
+    model = models.Sample
+    fields = ['name', 'collected', 'project', 'location']
+    success_url = reverse_lazy('pylims:sample_list')
+
+    def form_valid(self, form):
+        # This method is called when valid form data has been POSTed.
+        # It should return an HttpResponse.
+        # set the created by user using the request
+        form.instance.user = self.request.user
+        return super(SampleCreateView, self).form_valid(form)
