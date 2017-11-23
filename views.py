@@ -1,9 +1,7 @@
-import tempfile
-import os
 
-from django.core.files import File
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
+from django.utils.http import urlencode
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
@@ -145,7 +143,6 @@ class SampleImportView(LoginRequiredMixin, generic.CreateView):
     model = models.DataImport
     fields = ['driver', 'text']
     template_name = "pylims/sample_import_form.html"
-    success_url = reverse_lazy('pylims:import_preview')
 
     def form_valid(self, form):
         # This method is called when valid form data has been POSTed.
@@ -153,3 +150,82 @@ class SampleImportView(LoginRequiredMixin, generic.CreateView):
         # set the created by user using the request
         form.instance.user = self.request.user
         return super(SampleImportView, self).form_valid(form)
+
+
+class DataImportListView(LoginRequiredMixin, generic.ListView):
+    template_name = 'pylims/data_import_list.html'
+
+    def get_queryset(self):
+        return models.DataImport.objects.all()
+
+
+class DataImportDetailView(LoginRequiredMixin, generic.DetailView):
+    model = models.DataImport
+    template_name = 'pylims/data_import.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(DataImportDetailView, self).get_context_data(**kwargs)
+
+        # different contexts for imported versus non-imported data imports
+        if context['dataimport'].applied:
+            # get matching samples
+            context['sample_list'] = models.Sample.objects.filter(data_import=context['dataimport'])
+            # apply sample list filtering based on query string params
+            sample_list_context = filter_sample_table(context['sample_list'], self.request.GET)
+            # set sample table title
+            context['sample_list_title'] = "Imported samples"
+            context.update(sample_list_context)
+        else:
+            # get the preview context
+            context.update(self.preview_context(context))
+
+        return context
+
+    def preview_context(self, context):
+        # run import in preview mode
+        result = context['dataimport'].apply_import(save=False)
+
+        # classify result by object type and if it currently exists or not
+        out_dict = {'objects': {}, 'tags': {}}
+        for item in result:
+            cls = type(item).__name__
+            obj_cls = cls.replace('Tag', '') if cls.endswith('Tag') else cls
+            if obj_cls not in out_dict['objects']:
+                out_dict['objects'][obj_cls] = []
+                out_dict['tags'][obj_cls] = {}
+
+            if cls.endswith('Tag'):
+                objid = str(item.parent)
+                if objid not in out_dict['tags'][obj_cls]:
+                    out_dict['tags'][obj_cls][objid] = []
+                out_dict['tags'][obj_cls][objid].append(item)
+            else:
+                out_dict['objects'][obj_cls].append(item)
+
+        # need set the 'import_tags' attribute of each imported item
+        for obj_class in out_dict['objects']:
+            objects = out_dict['objects'][obj_class]
+            tags = out_dict['tags'][obj_class]
+            for obj in objects:
+                obj.import_tags = tags[str(obj)] if str(obj) in tags else []
+
+        # return dict to be added to the context
+        return {'sample_list': out_dict['objects']['Sample'],
+                'sample_list_title': 'Samples'}
+
+
+@login_required
+def apply_data_import(request, pk):
+    # get object
+    obj = get_object_or_404(models.DataImport, pk=pk)
+    url = reverse_lazy("pylims:data_import_detail", kwargs={'pk': pk})
+
+    try:
+        # try to apply import
+        result = obj.apply_import(save=True)
+        message = "Imported %s objects" % len(result)
+        # on success, redirect to the import detail page
+        return redirect(url + "?" + urlencode({'apply_success': message}))
+    except Exception as e:
+        # on fail, redirect to the import detail page and indicate failure
+        return redirect(url + "?" + urlencode({'apply_error': str(e)}))

@@ -1,6 +1,9 @@
 
 import csv
 
+from django.forms.models import fields_for_model
+
+
 # keep a dictionary of importers that can be registered
 _IMPORTERS = {}
 
@@ -54,14 +57,33 @@ def resolve_function(importer_name):
     return None
 
 
+def list_fields(model):
+    """
+    Lists fields and field classes from a model.
+    :param model: A django model
+    :return: A dict with a name: class mapping
+    """
+    return {name: field for name, field in fields_for_model(model).items()}
+
+
 def _row_as_model(row_model_obj, row_model_tag_obj, row, models, **kwargs):
     """
     This function turns a dictionary like {'name'='my sample name'}
     into a Sample(name='my sample id')
     """
+    # TODO resolve names like "location.slug"
 
-    print("row_import with row: %s" % row)
-    return []
+    fields = list_fields(row_model_obj)
+    obj = row_model_obj()
+    tags = []
+    for key, value in row.items():
+        if key in fields:
+            setattr(obj, key, value)
+        else:
+            tag = row_model_tag_obj(parent=obj, key=key, value=value)
+            tags.append(tag)
+
+    return [obj, ] + tags
 
 
 def _table_import(header, row_generator, models, row_model, **kwargs):
@@ -75,10 +97,11 @@ def _table_import(header, row_generator, models, row_model, **kwargs):
             row_dict = {key: value for key, value in zip(header, row)}
 
             # get model from the row
-            model_for_row = _row_as_model(row_model_obj, row_model_tag_obj,
+            models_for_row = _row_as_model(row_model_obj, row_model_tag_obj,
                                           row_dict, models, **kwargs)
-            if model_for_row:
-                final_models.append(model_for_row)
+            if models_for_row:
+                for obj in models_for_row:
+                    final_models.append(obj)
 
     return final_models
 

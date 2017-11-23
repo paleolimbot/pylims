@@ -17,5 +17,8 @@ urlpatterns = [
     url(r'^sample/$', views.SampleListView.as_view(), name="sample_list"),
     url(r'^sample/add$', views.SampleCreateView.as_view(), name="sample_create"),
     url(r'^sample/import$', views.SampleImportView.as_view(), name="sample_import"),
+    url(r'^data_import/$', views.DataImportListView.as_view(), name="data_import_list"),
+    url(r'^data_import/(?P<pk>[0-9]+)$', views.DataImportDetailView.as_view(), name="data_import_detail"),
+    url(r'^data_import/(?P<pk>[0-9]+)/apply$', views.apply_data_import, name="data_import_apply"),
     url(r'^sample/(?P<pk>[0-9]+)$', views.SampleDetailView.as_view(), name="sample_detail"),
 ]

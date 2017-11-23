@@ -97,8 +97,10 @@ class ParameterAdmin(PylimsAdmin):
     change_list_template = "admin/pylims/parameter/change_list.html"
     change_form_template = "admin/pylims/parameter/change_form.html"
 
+
 class DataImportAdmin(PylimsAdmin):
     inlines = [DataImportTagInline, ]
+    change_form_template = "admin/pylims/dataimport/change_form.html"
 
 # register models with the admin site
 admin.site.register(models.Project, ProjectAdmin)

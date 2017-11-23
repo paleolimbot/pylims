@@ -1,7 +1,5 @@
 import json
-import hashlib
 import datetime
-
 
 from django.db import models
 from django.core import serializers
@@ -78,7 +76,7 @@ class Project(models.Model):
 
 
 class ProjectTag(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    parent = models.ForeignKey(Project, on_delete=models.CASCADE)
     key = models.SlugField(max_length=55)
     value = models.TextField(blank=False)
     data_import = models.ForeignKey('DataImport', on_delete=models.SET_NULL,
@@ -86,7 +84,7 @@ class ProjectTag(models.Model):
 
     def save(self, *args, **kwargs):
         # update parent param modified tag
-        self.project.modified = datetime.datetime.now()
+        self.parent.modified = datetime.datetime.now()
         super(ProjectTag, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -120,7 +118,7 @@ class Location(models.Model):
 
 
 class LocationTag(models.Model):
-    location = models.ForeignKey(Location, on_delete=models.CASCADE)
+    parent = models.ForeignKey(Location, on_delete=models.CASCADE)
     key = models.SlugField(max_length=55)
     value = models.TextField(blank=False)
     data_import = models.ForeignKey('DataImport', on_delete=models.SET_NULL,
@@ -128,7 +126,7 @@ class LocationTag(models.Model):
 
     def save(self, *args, **kwargs):
         # update parent param modified tag
-        self.location.modified = datetime.datetime.now()
+        self.parent.modified = datetime.datetime.now()
         super(LocationTag, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -136,7 +134,7 @@ class LocationTag(models.Model):
 
 
 class Sample(models.Model):
-    name = models.CharField(max_length=25, blank=True)
+    name = models.CharField(max_length=255, blank=True)
     slug = models.CharField(max_length=55, unique=True, editable=False)
     parent = models.ForeignKey('self', on_delete=models.PROTECT, null=True, blank=True, editable=False)
 
@@ -189,7 +187,7 @@ class Sample(models.Model):
 
 
 class SampleTag(models.Model):
-    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+    parent = models.ForeignKey(Sample, on_delete=models.CASCADE)
     key = models.SlugField(max_length=55)
     value = models.TextField(blank=False)
     data_import = models.ForeignKey('DataImport', on_delete=models.SET_NULL,
@@ -197,7 +195,7 @@ class SampleTag(models.Model):
 
     def save(self, *args, **kwargs):
         # update parent param modified tag
-        self.sample.modified = datetime.datetime.now()
+        self.parent.modified = datetime.datetime.now()
         super(SampleTag, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -230,7 +228,7 @@ class Parameter(models.Model):
 
 
 class ParameterTag(models.Model):
-    param = models.ForeignKey(Parameter, on_delete=models.CASCADE)
+    parent = models.ForeignKey(Parameter, on_delete=models.CASCADE)
     key = models.SlugField(max_length=55)
     value = models.TextField(blank=False)
     data_import = models.ForeignKey('DataImport', on_delete=models.SET_NULL,
@@ -238,7 +236,7 @@ class ParameterTag(models.Model):
 
     def save(self, *args, **kwargs):
         # update parent param modified tag
-        self.param.modified = datetime.datetime.now()
+        self.parent.modified = datetime.datetime.now()
         super(ParameterTag, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -292,6 +290,13 @@ class DataImport(models.Model):
     created = models.DateTimeField("created", auto_now_add=True)
     modified = models.DateTimeField("modified", auto_now=True)
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('pylims:data_import_detail', kwargs={'pk': self.pk})
+
+    def as_json(self):
+        return pretty_json(self)
+
     def full_clean(self, *args, **kwargs):
         super(DataImport, self).full_clean(*args, **kwargs)
         # if import is not yet applied, test running it as part of full_clean
@@ -301,8 +306,6 @@ class DataImport(models.Model):
     def save(self, *args, **kwargs):
         # save self
         super(DataImport, self).save(*args, **kwargs)
-        # if not applied, apply the import now
-        self.apply_import(save=True, self_save=True)
 
     def run_import(self):
 
@@ -343,7 +346,19 @@ class DataImport(models.Model):
 
             # check that every item has a callable "save" method
             def valid_item(item):
-                hasattr(item, "save") and callable(item.save)
+                has_save = hasattr(item, "save") and callable(item.save)
+                has_full_clean = hasattr(item, "full_clean") and callable(item.full_clean)
+                return has_save and has_full_clean
+
+            # run clean() on each object, set the slug for samples
+            for item in result:
+                item.full_clean(exclude=('parent', ))
+                if isinstance(item, Sample):
+                    item.set_slug()
+                if hasattr(item, "user"):
+                    item.user = self.user
+                if hasattr(item, "data_import"):
+                    item.data_import = self
 
             invalid_objects = [str(i) for i in range(len(result)) if not valid_item(result[i])]
             if invalid_objects:
@@ -353,7 +368,7 @@ class DataImport(models.Model):
         except Exception as e:
             raise ValidationError("Import failed with %s: %s" % (type(e).__name__, e))
 
-    def apply_import(self, save=False, self_save=False):
+    def apply_import(self, save=False):
         """
         This applies the result (or tests the application of the result
         if save=False) to the database
@@ -374,36 +389,23 @@ class DataImport(models.Model):
                 reversion.set_comment("Applied data import: %s" % self)
 
                 for item in result:
-                    if hasattr(item, "user"):
-                        item.user = self.user
-                    if hasattr(item, "data_import"):
-                        item.data_import = self
-                    if save:
-                        item.save()
+                    # reset parent objects so that parent IDs get added properly
+                    if hasattr(item, "parent"):
+                        item.parent = item.parent
+                    item.full_clean()
+                    item.save()
 
-                # set the applied flag to "True"
+                # set the applied flag to "True", save self
                 self.applied = True
+                self.save()
 
-                # save self if requested
-                if self_save:
-                    self.save()
-
-        # classify result by object type and if it currently exists or not
-        out_dict = {}
-        for item in result:
-            cls = type(item)
-            if cls not in out_dict:
-                out_dict[cls] = []
-            out_dict[cls].append(item)
-
-        # return dict of added (or to-be added) objects by object type
-        return out_dict
+        return result
 
     def __str__(self):
-        return "Data Import: %s" % self.created
+        return "Data Import: %s" % self.pk
 
 
 class DataImportTag(models.Model):
-    data_import = models.ForeignKey(DataImport, on_delete=models.CASCADE)
+    parent = models.ForeignKey(DataImport, on_delete=models.CASCADE)
     key = models.SlugField(max_length=55)
     value = models.TextField(blank=False)

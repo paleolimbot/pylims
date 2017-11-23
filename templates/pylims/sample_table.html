@@ -16,7 +16,13 @@
             </thead>
         {% for sample in sample_list %}
             <tr>
-                <td><a href="{% url 'pylims:sample_detail' sample.id %}">{{ sample.slug }}</a></td>
+                <td>
+                    {% if sample.pk %}
+                    <a href="{% url 'pylims:sample_detail' sample.id %}">{{ sample.slug }}</a>
+                    {% else %}
+                    {{ sample.slug }}
+                    {% endif %}
+                </td>
                 <td>
                     {% if sample.user %}
                     <a href="{% url 'pylims:user_detail' user.id %}">{{ sample.user }}</a>
