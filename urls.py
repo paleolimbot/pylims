@@ -16,5 +16,6 @@ urlpatterns = [
     url(r'^user/(?P<pk>[0-9]+)$', views.UserDetailView.as_view(), name="user_detail"),
     url(r'^sample/$', views.SampleListView.as_view(), name="sample_list"),
     url(r'^sample/add$', views.SampleCreateView.as_view(), name="sample_create"),
+    url(r'^sample/import$', views.SampleImportView.as_view(), name="sample_import"),
     url(r'^sample/(?P<pk>[0-9]+)$', views.SampleDetailView.as_view(), name="sample_detail"),
 ]

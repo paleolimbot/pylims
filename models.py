@@ -282,9 +282,8 @@ class Measurement(models.Model):
 
 
 class DataImport(models.Model):
-    file = models.FileField(blank=True, null=True, upload_to='imports/%Y/%m/%d/')
-    file_digest = models.CharField(max_length=128, blank=True, editable=False)
-    digest = models.CharField(max_length=128, blank=True, editable=False)
+    text = models.TextField()
+    applied = models.BooleanField(default=False, editable=False)
     driver = models.CharField(max_length=255, default="csv_import")
     args = TagsField()
     description = models.TextField(blank=True)
@@ -293,7 +292,24 @@ class DataImport(models.Model):
     created = models.DateTimeField("created", auto_now_add=True)
     modified = models.DateTimeField("modified", auto_now=True)
 
+    def full_clean(self, *args, **kwargs):
+        super(DataImport, self).full_clean(*args, **kwargs)
+        # if import is not yet applied, test running it as part of full_clean
+        if not self.applied:
+            self.run_import()
+
+    def save(self, *args, **kwargs):
+        # save self
+        super(DataImport, self).save(*args, **kwargs)
+        # if not applied, apply the import now
+        self.apply_import(save=True, self_save=True)
+
     def run_import(self):
+
+        # raise error if import is already applied
+        if self.applied:
+            raise ValidationError("This import has already been applied")
+
         # get args as a dict
         import_args = TagsField.parse(self.args, dict)
         # get import function
@@ -315,7 +331,7 @@ class DataImport(models.Model):
             raise ValidationError("No import function could be found for driver: %s" % self.driver)
         try:
             # execute import function
-            result = import_fun(self.file, models=model_objects, **import_args)
+            result = import_fun(self.text, models=model_objects, **import_args)
 
             # check for empty result
             if not result:
@@ -329,37 +345,22 @@ class DataImport(models.Model):
             def valid_item(item):
                 hasattr(item, "save") and callable(item.save)
 
-            invalid_objects = [str(i) for i in range(len(result)) if valid_item(result[i])]
+            invalid_objects = [str(i) for i in range(len(result)) if not valid_item(result[i])]
             if invalid_objects:
                 raise ValidationError("Invalid objects were returned at positions %s" % ", ".join(invalid_objects))
 
             return result
         except Exception as e:
-            raise ValidationError("Import failed with Exception: %s" % e)
+            raise ValidationError("Import failed with %s: %s" % (type(e).__name__, e))
 
-    def calculate_digest(self, digest_args=True, digest_driver=True, digest_file=True):
-        # digest of everything requested
-        digest = hashlib.md5()
-        if digest_args:
-            args = TagsField.parse(self.args, dict)
-            args_str = json.dumps(args, sort_keys=True)
-            digest.update(bytes(args_str, "UTF-8"))
-        if digest_driver:
-            digest.update(bytes(str(self.driver), "UTF-8"))
-        if digest_file:
-            with self.file.open() as f:
-                for chunk in iter(lambda: f.read(4096), b""):
-                    digest.update(chunk)
-        return digest.hexdigest()
-
-    def apply_import(self, save=False):
+    def apply_import(self, save=False, self_save=False):
         """
         This applies the result (or tests the application of the result
         if save=False) to the database
         """
 
         # raise error if import is already applied
-        if self.digest:
+        if self.applied:
             raise ValidationError("This import has already been applied")
 
         # run the importer
@@ -380,9 +381,12 @@ class DataImport(models.Model):
                     if save:
                         item.save()
 
-                # set the digest of the file and the args and save this object
-                self.digest = self.calculate_digest()
-                self.save()
+                # set the applied flag to "True"
+                self.applied = True
+
+                # save self if requested
+                if self_save:
+                    self.save()
 
         # classify result by object type and if it currently exists or not
         out_dict = {}

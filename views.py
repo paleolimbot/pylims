@@ -1,9 +1,15 @@
+import tempfile
+import os
+
+from django.core.files import File
 from django.shortcuts import render
 from django.views import generic
+from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
+
 from . import models
 from .query_string_filter import filter_sample_table
 
@@ -133,3 +139,17 @@ class SampleCreateView(LoginRequiredMixin, generic.CreateView):
         # set the created by user using the request
         form.instance.user = self.request.user
         return super(SampleCreateView, self).form_valid(form)
+
+
+class SampleImportView(LoginRequiredMixin, generic.CreateView):
+    model = models.DataImport
+    fields = ['driver', 'text']
+    template_name = "pylims/sample_import_form.html"
+    success_url = reverse_lazy('pylims:import_preview')
+
+    def form_valid(self, form):
+        # This method is called when valid form data has been POSTed.
+        # It should return an HttpResponse.
+        # set the created by user using the request
+        form.instance.user = self.request.user
+        return super(SampleImportView, self).form_valid(form)

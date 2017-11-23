@@ -1,3 +1,4 @@
+
 import csv
 
 # keep a dictionary of importers that can be registered
@@ -83,17 +84,19 @@ def _table_import(header, row_generator, models, row_model, **kwargs):
 
 
 @pylims_importer()
-def csv_import(file, models, row_model="Sample", **kwargs):
+def csv_import(text, models, row_model="Sample", **kwargs):
 
-    with open(file.file.name, newline='') as csvfile:
-        csv_reader = csv.reader(csvfile)
-        csv_iter = iter(csv_reader)
-        header = list(next(csv_reader))
+    if not text:
+        raise ValueError("Value 'text' is empty")
 
-        def row_generator():
+    csv_reader = csv.reader(text.splitlines())
+    csv_iter = iter(csv_reader)
+    header = list(next(csv_reader))
+
+    def row_generator():
+        line = next(csv_iter, None)
+        while line is not None:
+            yield line
             line = next(csv_iter, None)
-            while line is not None:
-                yield line
-                line = next(csv_iter, None)
 
-        return _table_import(header, row_generator, models, row_model, **kwargs)
+    return _table_import(header, row_generator, models, row_model, **kwargs)
