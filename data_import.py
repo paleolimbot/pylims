@@ -66,22 +66,41 @@ def list_fields(model):
     return {name: field for name, field in fields_for_model(model).items()}
 
 
+def _resolve_object(model, field, value, models):
+    # turn model into a model class name
+    model_class_name = model.replace('_', ' ').title().replace(' ', '')
+    if model_class_name not in models:
+        raise ValueError("Model class for %s was not provided to the import function" % model_class_name)
+    model_class = models[model_class_name]
+    query_args = {field: value}
+    return model_class.objects.get(**query_args)
+
+
 def _row_as_model(row_model_obj, row_model_tag_obj, row, models, **kwargs):
     """
     This function turns a dictionary like {'name'='my sample name'}
     into a Sample(name='my sample id')
     """
-    # TODO resolve names like "location.slug"
-
     fields = list_fields(row_model_obj)
     obj = row_model_obj()
     tags = []
     for key, value in row.items():
-        if key in fields:
-            setattr(obj, key, value)
+        if '.' in key:
+            model_slug, lookup_field = key.split('.', maxsplit=1)
+            if model_slug not in fields:
+                raise ValueError("%s is not a field in %s" % (model_slug, row_model_obj.__name__))
+            # if value is blank, don't try to resolve it
+            if not value:
+                continue
+            target_object = _resolve_object(model_slug, lookup_field, value, models)
+            setattr(obj, model_slug, target_object)
+
         else:
-            tag = row_model_tag_obj(parent=obj, key=key, value=value)
-            tags.append(tag)
+            if key in fields:
+                setattr(obj, key, value)
+            else:
+                tag = row_model_tag_obj(parent=obj, key=key, value=value)
+                tags.append(tag)
 
     return [obj, ] + tags
 
